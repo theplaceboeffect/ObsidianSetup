@@ -11,8 +11,14 @@
 .PARAMETER VaultPath
     The path to the target Obsidian vault. Must contain a .obsidian folder.
 
+.PARAMETER VerboseDebug
+    Enable detailed debugging output to help troubleshoot issues.
+
 .EXAMPLE
     .\update-obsdidian.ps1 -VaultPath "C:\Users\username\Documents\ObsidianVault"
+
+.EXAMPLE
+    .\update-obsdidian.ps1 -VaultPath "C:\Users\username\Documents\ObsidianVault" -VerboseDebug
 
 .NOTES
     This script requires PowerShell 5.1 or later.
@@ -20,7 +26,10 @@
 
 param(
     [Parameter(Mandatory = $true)]
-    [string]$VaultPath
+    [string]$VaultPath,
+    
+    [Parameter(Mandatory = $false)]
+    [switch]$VerboseDebug
 )
 
 # Function to write colored output
@@ -36,15 +45,25 @@ function Write-ColorOutput {
 function Compare-FileContents {
     param(
         [string]$File1,
-        [string]$File2
+        [string]$File2,
+        [bool]$DebugMode = $false
     )
     
     if (!(Test-Path $File1) -or !(Test-Path $File2)) {
+        if ($DebugMode) {
+            Write-ColorOutput "DEBUG: One or both files don't exist - File1: $(Test-Path $File1), File2: $(Test-Path $File2)" "Gray"
+        }
         return $false
     }
     
     $hash1 = Get-FileHash $File1 -Algorithm SHA256
     $hash2 = Get-FileHash $File2 -Algorithm SHA256
+    
+    if ($DebugMode) {
+        Write-ColorOutput "DEBUG: Comparing files - File1: $File1 (Hash: $($hash1.Hash.Substring(0,8)))" "Gray"
+        Write-ColorOutput "DEBUG: Comparing files - File2: $File2 (Hash: $($hash2.Hash.Substring(0,8)))" "Gray"
+        Write-ColorOutput "DEBUG: Files are $(if($hash1.Hash -eq $hash2.Hash) {'identical'} else {'different'})" "Gray"
+    }
     
     return $hash1.Hash -eq $hash2.Hash
 }
@@ -54,20 +73,35 @@ function Backup-File {
     param(
         [string]$FilePath,
         [string]$VaultPath,
-        [string]$SourceFile
+        [string]$SourceFile,
+        [bool]$DebugMode = $false
     )
+    
+    if ($DebugMode) {
+        Write-ColorOutput "DEBUG: Backup-File called for: $FilePath" "Gray"
+        Write-ColorOutput "DEBUG: Source file: $SourceFile" "Gray"
+        Write-ColorOutput "DEBUG: Target file exists: $(Test-Path $FilePath)" "Gray"
+    }
     
     if (Test-Path $FilePath) {
         # Check if contents are different
         $contentsDifferent = $true
         if (Test-Path $SourceFile) {
-            $contentsDifferent = !(Compare-FileContents -File1 $FilePath -File2 $SourceFile)
+            $contentsDifferent = !(Compare-FileContents -File1 $FilePath -File2 $SourceFile -DebugMode $DebugMode)
+        }
+        
+        if ($DebugMode) {
+            Write-ColorOutput "DEBUG: Contents different: $contentsDifferent" "Gray"
         }
         
         if ($contentsDifferent) {
             $timestamp = Get-Date -Format "yyyyMMdd--HHmmss"
             $fileName = Split-Path $FilePath -Leaf
             $backupDir = Join-Path $VaultPath "99 - Meta\.backups"
+            
+            if ($DebugMode) {
+                Write-ColorOutput "DEBUG: Creating backup in: $backupDir" "Gray"
+            }
             
             # Create backup directory if it doesn't exist
             if (!(Test-Path $backupDir)) {
@@ -80,7 +114,14 @@ function Backup-File {
             Write-ColorOutput "Backed up: $FilePath -> $backupPath" "Yellow"
             return $backupPath
         } else {
+            if ($DebugMode) {
+                Write-ColorOutput "DEBUG: Skipping backup - contents are identical" "Gray"
+            }
             return $null
+        }
+    } else {
+        if ($DebugMode) {
+            Write-ColorOutput "DEBUG: Target file doesn't exist - no backup needed" "Gray"
         }
     }
     return $null
@@ -91,16 +132,26 @@ function Copy-DirectoryRecursive {
     param(
         [string]$Source,
         [string]$Destination,
-        [string]$VaultPath
+        [string]$VaultPath,
+        [bool]$DebugMode = $false
     )
     
     $copiedFiles = @()
+    
+    if ($DebugMode) {
+        Write-ColorOutput "DEBUG: Copy-DirectoryRecursive called" "Gray"
+        Write-ColorOutput "DEBUG: Source: $Source" "Gray"
+        Write-ColorOutput "DEBUG: Destination: $Destination" "Gray"
+    }
     
     if (Test-Path $Source) {
         # Create destination directory if it doesn't exist
         if (!(Test-Path $Destination)) {
             New-Item -ItemType Directory -Path $Destination -Force | Out-Null
             Write-ColorOutput "Created directory: $Destination" "Green"
+            if ($DebugMode) {
+                Write-ColorOutput "DEBUG: Created destination directory" "Gray"
+            }
         }
         
         # Copy all items from source to destination
@@ -113,13 +164,29 @@ function Copy-DirectoryRecursive {
                 if (!(Test-Path $destPath)) {
                     New-Item -ItemType Directory -Path $destPath -Force | Out-Null
                     Write-ColorOutput "Created directory: $destPath" "Green"
+                    if ($DebugMode) {
+                        Write-ColorOutput "DEBUG: Created subdirectory: $destPath" "Gray"
+                    }
+                } else {
+                    if ($DebugMode) {
+                        Write-ColorOutput "DEBUG: Directory already exists: $destPath" "Gray"
+                    }
                 }
             } else {
                 # It's a file
-                $backupPath = Backup-File -FilePath $destPath -VaultPath $VaultPath -SourceFile $_.FullName
+                if ($DebugMode) {
+                    Write-ColorOutput "DEBUG: Processing file: $($_.Name)" "Gray"
+                    Write-ColorOutput "DEBUG: Source: $($_.FullName)" "Gray"
+                    Write-ColorOutput "DEBUG: Destination: $destPath" "Gray"
+                }
+                
+                $backupPath = Backup-File -FilePath $destPath -VaultPath $VaultPath -SourceFile $_.FullName -DebugMode $DebugMode
                 
                 # Only copy if backup was created (meaning contents are different) or file doesn't exist
                 if ($backupPath -or !(Test-Path $destPath)) {
+                    if ($DebugMode) {
+                        Write-ColorOutput "DEBUG: Copying file (backup created or file doesn't exist)" "Gray"
+                    }
                     Copy-Item $_.FullName $destPath -Force
                     $copiedFiles += @{
                         Source = $_.FullName
@@ -127,6 +194,10 @@ function Copy-DirectoryRecursive {
                         Backup = $backupPath
                     }
                     Write-ColorOutput "Copied: $($_.Name) -> $destPath" "Green"
+                } else {
+                    if ($DebugMode) {
+                        Write-ColorOutput "DEBUG: Skipping file - no changes needed" "Gray"
+                    }
                 }
             }
         }
@@ -169,7 +240,7 @@ try {
     
     # Merge entire library into vault
     if (Test-Path $libraryPath) {
-        $libraryMods = Copy-DirectoryRecursive -Source $libraryPath -Destination $VaultPath -VaultPath $VaultPath
+        $libraryMods = Copy-DirectoryRecursive -Source $libraryPath -Destination $VaultPath -VaultPath $VaultPath -DebugMode $VerboseDebug
         if ($libraryMods.Count -gt 0) {
             Write-ColorOutput "`nMerging library into vault..." "Cyan"
         }

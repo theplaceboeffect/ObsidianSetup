@@ -28,3 +28,4 @@ These are the remaining tasks for this project.
 1. [I] Rename templates to be `XXX Template.md`
 1. [I] Why are the folders hard-coded? just merge the library into the vault
 1. [I] Add a note template
+1. [I] Show detailed debugging when the -Debug flag is passed

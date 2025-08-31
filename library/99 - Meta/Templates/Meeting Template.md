@@ -2,6 +2,7 @@
 NoteType: Meeting
 Created: <% tp.file.creation_date() %>
 Modified: <% tp.file.last_modified_date() %>
+MeeitngDateTime:
 Tags: meeting
 ---
 
