@@ -33,3 +33,4 @@ These are the remaining tasks for this project.
   - Created `Daily Notes Template.md` with comprehensive daily planning sections
   - Includes Templater integration for dynamic date handling
   - Features sections for goals, schedule, notes, daily review, health tracking, and gratitude
+1. [I] When `-Debug` flag is passed - list every source file and it's destination.
