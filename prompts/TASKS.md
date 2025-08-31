@@ -4,6 +4,7 @@ These are the remaining tasks for this project.
 
 ## Implementation
 **COMPLETED**: 20241219-143000
+**BRANCH COMPLETED**: 20241219-150000
 
 1. [I] Generate a some Obsidian Templates in `library/99 - Meta/Templates`
   - Use Templater conventions for maintaining data dynamically.
@@ -34,3 +35,8 @@ These are the remaining tasks for this project.
   - Includes Templater integration for dynamic date handling
   - Features sections for goals, schedule, notes, daily review, health tracking, and gratitude
 1. [I] When `-Debug` flag is passed - list every source file and it's destination.
+1. [I] The font for dataview tables should be 8pt, width 200px **COMPLETED**: 20241219-170000
+  - Updated dataview-table-fixes.css to use 8pt font size
+  - Set table width to 200px instead of 100%
+  - Applied changes to both light and dark mode styles
+  - Updated responsive design to maintain consistency

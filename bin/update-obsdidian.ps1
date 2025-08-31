@@ -154,8 +154,8 @@ function Copy-DirectoryRecursive {
             }
         }
         
-        # Copy all items from source to destination
-        Get-ChildItem -Path $Source -Recurse | ForEach-Object {
+        # Copy all items from source to destination (including hidden files)
+        Get-ChildItem -Path $Source -Recurse -Force | ForEach-Object {
             $relativePath = $_.FullName.Substring($Source.Length + 1)
             $destPath = Join-Path $Destination $relativePath
             
