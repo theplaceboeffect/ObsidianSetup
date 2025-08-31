@@ -11,6 +11,7 @@ This project keeps my Obsidian vault configured and up to date with different ar
   - People/contact management
   - Knowledge/learning notes
   - Task tracking
+  - Daily notes
   - General notes
 
 ## Structure
@@ -24,6 +25,7 @@ This project keeps my Obsidian vault configured and up to date with different ar
 │   │       ├── People Template.md
 │   │       ├── Knowledge Template.md
 │   │       ├── Task Template.md
+│   │       ├── Daily Notes Template.md
 │   │       └── Note Template.md
 │   └── .obsidian/
 │       └── snippets/
