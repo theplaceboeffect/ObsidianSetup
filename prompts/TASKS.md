@@ -29,3 +29,7 @@ These are the remaining tasks for this project.
 1. [I] Why are the folders hard-coded? just merge the library into the vault
 1. [I] Add a note template
 1. [I] Show detailed debugging when the -Debug flag is passed
+1. [I] Create a template for Daily Notes **COMPLETED**: 20241219-150000
+  - Created `Daily Notes Template.md` with comprehensive daily planning sections
+  - Includes Templater integration for dynamic date handling
+  - Features sections for goals, schedule, notes, daily review, health tracking, and gratitude
